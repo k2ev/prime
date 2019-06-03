@@ -11,17 +11,17 @@ settings["s3"] = {
 settings["queue"] = {
     "QueueName": "sqs_prime.fifo",
     "Attributes": {
-        "DelaySeconds": '60',
+        "DelaySeconds": '10',
         "MessageRetentionPeriod": '86400',
         "FifoQueue": 'true',
         "ContentBasedDeduplication": 'true',
-        "VisibilityTimeout": '300',
+        "VisibilityTimeout": '60',
         "ReceiveMessageWaitTimeSeconds": '20'
     }
 }
 
 settings["sqs_dlq"] = {
-    "QueueName": "dlq"
+    "QueueName": "dlq.fifo"
 }
 
 settings["region_name"] = 'ap-south-1'

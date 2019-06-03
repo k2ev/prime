@@ -10,7 +10,7 @@ def find_primes(num_start: int, num_end: int):
     for num in range(num_start, num_end+1):
         if isprime(num):
             count += 1
-    print("count is: " + count)
+    print("count is: {}".format(count))
     return count
 
 

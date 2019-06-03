@@ -9,10 +9,14 @@ def create_sqs_queue(sqs, queue_params=None):
     if queue_params is None:
         queue_params = settings["queue"]
 
-    response = sqs.create_queue(
-        QueueName=queue_params["QueueName"],
-        Attributes=queue_params["Attributes"]
-    )
+    try:
+        response = sqs.create_queue(
+            QueueName=queue_params["QueueName"],
+            Attributes=queue_params["Attributes"]
+        )
+    except Exception as e:
+        print("Error in creating sqs queue")
+
     return response
 
 
@@ -22,7 +26,7 @@ def get_sqs_queue(sqs, queue_name):
 
 
 def get_queue_attributes(sqs, queue_url, attributes=['All']):
-    print("getting queue attributes for queue url: "+ queue_url)
+    print("getting queue attributes for queue url: " + queue_url)
     return sqs.get_queue_attributes(sqs, QueueUrl=queue_url, Attributes=attributes)
 
 
@@ -41,10 +45,17 @@ def receive_messages(sqs, queue, MaxNumberOfMessages=1):
 
 
 def delete_queue(sqs, queue_url):
-    try :
+    try:
         sqs.delete_queue(QueueUrl=queue_url)
     except Exception as e:
         print("failed to delete queue")
+
+
+def delete_message(sqs, queue_url, receipt_handle):
+    return sqs.delete_message(
+        QueueUrl=queue_url,
+        ReceiptHandle=receipt_handle
+    )
 
 
 class SQSConsumer:
@@ -119,20 +130,20 @@ class SQSConsumer:
                     print("There are no messages in Queue to display")
                     return num_msgs
                 else:
-                    num_msgs = messages
+                    num_msgs = len(messages)
 
-                for message in messages["Messages"]:
-                    print(message)
-                    process_status = self.process_message(message["Body"])
-                    if process_status:
-                        self.delete_message(message["ReceiptHandle"])
+                    for message in messages["Messages"]:
+                        print(message)
+                        process_status = self.process_message(message["Body"])
+                        if process_status:
+                            self.delete_message(message["ReceiptHandle"])
         except Exception as err:
             print("Error Message {0}".format(err))
         return num_msgs
 
     def delete_message(self, message_receipt_handle):
         try:
-            self.sqs.delete_message(self.queue_url, message_receipt_handle)
+            delete_message(self.sqs, self.queue_url, message_receipt_handle)
             print("Message deleted from Queue")
             return True
         except Exception as err:
@@ -155,7 +166,7 @@ class SQSConsumer:
     def delete_queue(self):
         try:
             self.sqs.delete_queue(QueueUrl=self.queue_url)
-        except Exception as e:
-            print("failed to delete queue")
+        except Exception as err:
+            print("failed to delete queue: {}".format(err))
 
 
